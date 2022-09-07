@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>SOM Madrid - Simulador de producción fotovoltaica individual</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" 
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <!-- OpenLayers -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.1.0/ol.css">
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.14.1/css/ol.css" type="text/css"> -->
+    <style>
+        .map {
+        height: 500px;
+        width: 100%;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.15.1/build/ol.js"></script>
+
+    <!-- I18n -->
+    <script src="https://cdn.jsdelivr.net/npm/i18next@21.6.10/i18next.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-i18next@1.2.1/jquery-i18next.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/i18next-browser-languagedetector@6.1.3/i18nextBrowserLanguageDetector.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/i18next-http-backend@1.3.1/i18nextHttpBackend.min.js"></script>
+    
+    <!-- Plotly-->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <!-- Funcion propia de gestion entre DOM y clases -->
+    <script type="module" src="./js/Dispatcher.js"></script>
+    <script type="module"> import Dispatch from "./js/Dispatcher.js";</script>
+
+</head>
+
+<script type="text/javascript">
+window.addEventListener("load", function(event) {
+
+    Dispatch('Inicializa eventos');
+
+});
+</script>
+
+<body>
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-sm-7">
+                <h3 data-i18n="main_LBL_titulo"></h3>
+            </div>
+            <div class="col-sm-3">
+                <label class="form-check-label align-right" for="instrucciones" ></label>
+                    <a href="datos/Instrucciones.html" target="_blank" id="instrucciones" data-i18n="main_LBL_instrucciones"></a> 
+                </label>
+            </div>
+            <div class="col-sm-2">
+                <select class="form-select" id="idioma" >
+                    <option value="es">Español</option>
+                    <option value="en">English</option>
+                    <option value="ca">Catalan</option>
+                    <option value="ga">Galego</option>
+                </select>
+            </div>
+        </div>
+        <p class="text-start" id="nombreProyecto" data-i18n="main_LBL_proyectoActivo"></p>
+
+        <!-- Pestañas de la aplicacion -->
+        <ul class="nav nav-tabs navbar-light" style="background-color: #e3f2fd;" id="nav-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a  class="nav-link active" id="nav-proyecto-tab" data-bs-toggle="tab" href="#proyecto-tab" role="tab" data-i18n="main_TAB_proyecto"></a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="nav-resultados-tab" data-bs-toggle="tab" href="#resultados-tab" role="tab" data-i18n="main_TAB_resultados"></a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a  class="nav-link" id="nav-precios-tab" data-bs-toggle="tab" href="#precios-tab" role="tab" data-i18n="main_TAB_precios"></a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="nav-graficos-tab" data-bs-toggle="tab" href="#graficos-tab" role="tab" data-i18n="main_TAB_graficos"></a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="nav-parametros-tab" data-bs-toggle="tab" href="#parametros-tab" role="tab" data-i18n="main_TAB_parametros"></a>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Tab panes -->
+    <div class="tab-content" id="nav-tabContent">
+    
+     <!-- Contenido del tab desde donde se cargan los datos de consumo y localizacion de entrada -->
+     <div class="tab-pane fade show active" id="proyecto-tab" role="tabpanel">
+
+        <!-- Texto explicativo de la operativa de esta pestaña-->
+        <div class="row">
+            <div class="col-sm-10">
+                <a data-i18n="proyecto_LBL_descripcion"><br></a>
+            </div>
+        </div>
+
+        <!-- Seleccion del archivo con los consumos horarios CSV o potencia anual para el caso de perfil tipo REE -->
+        <div class="row align-items-center">
+            <div class="col-sm-4">
+              <div class="form-check form-check-inline">
+                <input class="form-check-input align-middle" type="radio" name="origen" id="desdeFichero" checked> <!-- Tiene evento de cambio asociado en Dispatcher-->    
+                <label class="form-check-label align-middle" for="desdeFichero" ></label>
+                    <a href="datos/Enlaces para descarga CSV individual.htm" 
+                    target="_blank" data-i18n="proyecto_LBL_guiaCSV"></a> 
+                </label>
+              </div>
+            </div>
+
+            <div class="col-sm-2">
+                <label class="col-form-label align-middle col-sm-2" for="tarifa">Tarifa</label> <!-- Tiene evento de cambio asociado en Dispatcher-->    
+                <select class="form-select col-sm-2" id="tarifa">
+                    <option value="2.0TD">2.0TD</option>
+                    <option value="3.0TD">3.0TD</option>
+                </select>
+            </div>
+      
+            <div class="col-sm-4">
+              <div class="form-check form-check-inline">
+                 <label class="form-check-label float-right" for="desdePotencia"></label> 
+                    <a href="https://www.ree.es/sites/default/files/01_ACTIVIDADES/Documentos/Documentacion-Simel/BOE-A-2021-21395.pdf" 
+                    target="_blank" data-i18n="proyecto_LBL_metodoREE"></a>
+                </label>
+                <input class="form-check-input float-right" type="radio" name="origen" id="desdePotencia"> <!-- Tiene evento de cambio asociado en Dispatcher-->    
+
+              </div>
+            </div>
+          </div>
+      
+          <div class="row">
+            <div class="col-sm-6">
+              <input span="form-control" type="file" accept=".csv" id="csvfile"> <!-- Tiene evento de cambio asociado en Dispatcher-->
+            </div>
+      
+            <div class="col-sm-6">
+                <div class="input-group">
+                <label for="potenciaAno" class="col-form-label" data-i18n="proyecto_LBL_potenciaBase"></label>
+                <input type="number" class="form-control" id="potenciaAno" disabled>
+                <span class="input-group-text" id="cargarREE" data-i18n="proyecto_LBL_cargar"></span>  <!-- Tiene evento de cambio asociado en Dispatcher-->          
+                </div>
+            </div>
+            <div class="col-sm-12">
+                <small id="csv_resumen" class="text-muted"></small>
+            </div>
+          </div>
+          <hr/>
+      
+
+        <div class="row justify-content-center">
+            <label for="proyecto" class="col-sm-1 col-form-label" data-i18n="proyecto_LBL_nombre_proyecto"></label>
+            <div class="col-sm-11">
+                <input type="text" class="form-control" id="proyecto"> <!-- Tiene evento de cambio asociado en Dispatcher-->
+            </div>
+        </div>
+
+        <div class="row justify-content-center align-items-center">
+
+            <label for="lonlat" class="col-sm-1 col-form-label" data-i18n="proyecto_LBL_lonlat"></label>
+            <div class="col-sm-3">
+                <input type="text" class="form-control" id="lonlat" data-point="">
+            </div>
+
+            <label for="inclinacion" class="col-sm-1 col-form-label" data-i18n="proyecto_LBL_inclinacion"></label>
+            <div class="col-sm-2">
+                <input type="number" class="form-control" id="inclinacion" > <!-- Tiene evento de cambio asociado en Dispatcher-->
+            </div>
+            <div class="col-sm-1">
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input align-middle" type="checkbox" id="inclinacionOptima" checked>
+                  <label class="form-check-label align-middle" for="inclinacionOptima" data-i18n="proyecto_LBL_optimo"></label>
+                </div>
+            </div>
+
+            <label for="azimut" class="col-sm-1 col-form-label" data-i18n="proyecto_LBL_azimut"></label>
+            <div class="col-sm-2">
+                <input type="number" class="form-control" id="azimut">
+            </div>
+            <div class="col-sm-1">
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="checkbox" id="azimutOptima" checked>
+                  <label class="form-check-label" for="azimutOptima" data-i18n="proyecto_LBL_optimo"></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group mt-3">
+            <input type="text" class="form-control col-sm-4 text-info" id="direccion" onfocus="this.value=''"> <!-- Tiene evento de cambio asociado en Dispatcher-->
+            <div class="input-group-prepend col-sm-8">
+              <select class="form-select" id="candidatos" disabled></select>  <!-- Tiene evento de cambio asociado en Dispatcher-->
+            </div>
+        </div>
+
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <button class="btn btn-primary" type="button" id="calcular" data-i18n="proyecto_BTN_calcular" 
+                data-bs-toggle="tooltip" data-bs-placement="top" title="Se puede proceder al cálculo"></button>
+                <span class="col-sm-2" id="accionMapa" data-i18n="proyecto_LBL_accion_mapa1"></span>
+              </button>
+            </div>
+        </div>
+        <div id="map" class="map"></div>
+    
+    </div>
+
+  <!-- Contenido del tab desde donde se vuelcan los resultados del balance de energia-->
+    <div class="tab-pane fade" id="resultados-tab" role="tabpanel">
+        <hr/>
+        <div class="form-group row justify-content-center" style="background-color: #e3f2fd;">
+            <div class="col-sm-2" id="panelesMinimo" data-i18n="resultados_LBL_panelesMinimo"></div>
+            <input class="col-sm-1 text-end" type="number" id="numeroPaneles">
+
+            <div class="col-sm-2 offset-sm-2" id="potenciaPanel" data-i18n="resultados_LBL_potenciaPanel"></div>
+            <input class="col-sm-1 text-end" type="number" id="potenciaUnitaria">
+        </div>
+        <hr/>
+
+        <div class="form-group row justify-content-center">
+            <div class="col-sm-2" data-i18n="resultados_LBL_system_loss"></div>
+            <div class="col-sm-2 text-end" id="system_loss"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+            <div class="col-sm-2 offset-md-1" data-i18n="resultados_LBL_technology"></label></div>
+            <div class="col-sm-2 text-end" id="technology"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+        </div>
+        <div class="form-group row justify-content-center">
+            <div class="col-sm-2" data-i18n="resultados_LBL_PVGISinclinacion"></div>
+            <div class="col-sm-2 text-end" id="PVGISinclinacion"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+            <div class="col-sm-2 offset-md-1" data-i18n="resultados_LBL_inclinacionOptimal"></label></div>
+            <div class="col-sm-2 text-end" id="inclinacionOptimal"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+        </div>
+        <div class="form-group row justify-content-center">
+            <div class="col-sm-2" data-i18n="resultados_LBL_PVGISazimut"></div>
+            <div class="col-sm-2 text-end" id="PVGISazimut"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+            <div class="col-sm-2 offset-md-1" data-i18n="resultados_LBL_azimutOptimal"></label></div>
+            <div class="col-sm-2 text-end" id="azimutOptimal"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+        </div>
+
+        <hr/>
+        <div class="form-group row justify-content-center">
+            <div class="col-sm-2" data-i18n="resultados_LBL_objetivoHora"></div>
+            <div class="col-sm-2 text-end" id="objetivoHora"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+            <div class="col-sm-2 offset-md-1" data-i18n="resultados_LBL_potenciaDisponible"></label></div>
+            <div class="col-sm-2 text-end" id="potenciaDisponible"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+        </div>
+        
+        <div class="form-group row justify-content-center">
+            <div class="col-sm-2" data-i18n="resultados_LBL_consumoPFVdiaria"></div>
+            <div class="col-sm-2 text-end" id="PFVDiaria"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+            <div class="col-sm-2 offset-md-1" data-i18n="resultados_LBL_produccionMediaDiaria"></div>
+            <div class="col-sm-2 text-end" id="produccionMediaDiaria"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+        </div>
+
+        <div class="form-group row justify-content-center">
+            <div class="col-sm-2" data-i18n="resultados_LBL_consumoPFVmensual"></div>
+            <div class="col-sm-2 text-end" id="PFVMensual"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+            <div class="col-sm-2 offset-md-1" data-i18n="resultados_LBL_produccionMediaMensual"></div>
+            <div class="col-sm-2 text-end" id="produccionMediaMensual"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+        </div>
+
+        <div class="form-group row justify-content-center">
+            <div class="col-sm-2" data-i18n="resultados_LBL_consumoPFVanual"></div>
+            <div class="col-sm-2 text-end" id="PFVAnual"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+            <div class="col-sm-2 offset-md-1" data-i18n="resultados_LBL_produccionMediaAnual"></div>
+            <div class="col-sm-2 text-end" id="produccionMediaAnual"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+        </div>
+        <hr/>
+        <div class="form-group row justify-content-center">
+            <div class="col-sm-3" data-i18n="resultados_LBL_kgCO2AnualAhorrado"></div>
+            <div class="col-sm-1  text-end" id="CO2Anual"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+        </div>
+        <hr/>
+        <div class="form-group row justify-content-center">
+            <div class="col-sm-2" data-i18n="resultados_LBL_energiaAhorrada"></div>
+            <div class="col-sm-2 text-end" id="porcientoEnergiaAhorrada"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+            <div class="col-sm-2 offset-md-1" data-i18n="resultados_LBL_energíaDemandadaVersusGenerada"></div>
+            <div class="col-sm-2 text-end text-end" id="porcientoEnergiaAhorradaGenerada"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+        </div>
+        <hr/>
+        <div class="row justify-content-center">
+            <div class="col-sm-2" data-i18n="resultados_LBL_energiaSobrante"></div>
+            <div class="col-sm-2 text-end" id="energiaSobrante"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+            <div class="col-sm-2 offset-md-1" data-i18n="resultados_LBL_energiaFaltante"></div>
+            <div class="col-sm-2 text-end" id="energiaFaltante"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+        </div>
+        <hr/>
+        <div class="row justify-content-center">
+            <div class="col-sm-3 text-center" data-i18n="resultados_LBL_autoconsumoMedioAnual"></div>
+            <div class="col-sm-3 text-center" data-i18n="resultados_LBL_autosuficienciaMediaAnual"></div>
+            <div class="col-sm-3 text-center" data-i18n="resultados_LBL_autosuficienciaMaxima"></div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-sm-3 text-center" id="porcientoAutoconsumo"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+            <div class="col-sm-3 text-center" id="porcientoAutosuficiencia"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+            <div class="col-sm-3 text-center" id="autosuficienciaMaxima"><a data-i18n="resultados_LBL_pendienteCalculo"></a></div>
+        </div>
+        <hr/>
+          <!-- Area reservada para el grafico resumen -->
+        <div class="tab-pane fade" id="graficosResumen-tab" role="tabpanel" aria-labelledby="graficosResumen-tab"><a data-i18n="resultados_LBL_graficoResumen"></a></div>
+            <div id="graf_resumen"></div>
+    </div>
+
+    <!-- Contenido del tab reservado para los gráficos -->
+    <div class="tab-pane fade" id="graficos-tab" role="tabpanel"><a data-i18n="graficos_LBL_descripcion"></a>
+        <div id="graf_1"></div>
+        <div class="row">
+            <div class="col">
+                <div id="graf_2"></div>
+            </div>
+            <div class="col">
+                <div id="graf_3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido del tab desde donde se cargan la informacion de tarifas. otras condiciones económicas y el balance económico-->
+    <div class="tab-pane fade" id="precios-tab" role="tabpanel">
+
+        <!-- Texto explicativo de la operativa de esta pestaña-->
+        <div class="row justify-content-center">
+            <div class="col-sm-10" data-i18n="precios_LBL_descripcion">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col col-sm-2 offset-md-1">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon1">P1</span>
+                    </div>
+                    <input type="number" id="tarifaP1" class="form-control text-end">
+                </div>
+            </div>
+            <div class="col col-sm-2">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon1">P2</span>
+                    </div>
+                    <input type="number"  id="tarifaP2" class="form-control text-end">
+                </div>
+            </div>
+            <div class="col col-sm-2">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon1">P3</span>
+                    </div>
+                    <input type="number"  id="tarifaP3" class="form-control text-end">
+                </div>
+            </div>
+            <div class="col col-sm-3">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon1" data-i18n="precios_LBL_compensa"></span>
+                    </div>
+                    <input type="number"  id="tarifaP0" class="form-control  text-end">
+                </div>
+            </div>
+        </div>
+
+        <div id="tablaTarifas3.0TD" style="display: none;">
+            <div class="row ">
+                <div class="col col-sm-2 offset-md-1">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1">P4</span>
+                        </div>
+                        <input type="number" id="tarifaP4" class="form-control text-end">
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1">P5</span>
+                        </div>
+                        <input type="number" id="tarifaP5" class="form-control text-end">
+                    </div>
+                </div>
+                <div class="col col-sm-2">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1">P6</span>
+                        </div>
+                        <input type="number" id="tarifaP6" class="form-control text-end">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr/>
+        <div class="form-group row justify-content-center">
+            <div class="col-sm-3" data-i18n="precios_LBL_gastoAnualSinPlacas"></div>
+            <div class="col-sm-1 text-end" id="gastoAnualSinPlacas"><a data-i18n="precios_LBL_pendienteCalculo"></a></div>
+            <div class="col-sm-3 offset-md-1" data-i18n="precios_LBL_gastoAnualConPlacas"></div>
+            <div class="col-sm-1 text-end" id="gastoAnualConPlacas"><a data-i18n="precios_LBL_pendienteCalculo"></a></div>
+        </div>
+        <div class="form-group row justify-content-center">
+            <div class="col-sm-3" data-i18n="precios_LBL_ahorroAnual"></div>
+            <div class="col-sm-1 text-end" id="ahorroAnual"><a data-i18n="precios_LBL_pendienteCalculo"></a></div>
+            <div class="col-sm-3 offset-md-1" data-i18n="precios_LBL_ahorroAnualPorciento"></div>
+            <div class="col-sm-1 text-end" id="ahorroAnualPorCiento"><a data-i18n="precios_LBL_pendienteCalculo"></a></div>
+        </div>
+        <div class="form-group row justify-content-center">
+            <div class="col-sm-3" data-i18n="precios_LBL_noCompensadoAnual"></div>
+            <div class="col-sm-1 text-end" id="noCompensado"><a data-i18n="precios_LBL_pendienteCalculo"></a></div>
+            <div class="col-sm-3 offset-md-1" data-i18n="precios_LBL_costeInstalacion"></div>
+            <div class="col-sm-1 text-end" id="costeInstalacion"><a data-i18n="precios_LBL_pendienteCalculo"></a></div>
+        </div>
+        <hr/>
+        <div class="form-group row" style="background-color: #e3f2fd;">
+            <label for="ibi" class="offset-md-1 col-sm-1 col-form-label" data-i18n="precios_LBL_IBI" ></label>
+            <div class="col-sm-2">
+                <input type="number" class="form-control" id="valorIBI">
+            </div>
+            <label for="subvencionIBI" class="col-sm-2 col-form-label" data-i18n="precios_LBL_subvencionIBI" ></label>
+            <div class="col-sm-2">
+                <input type="number" class="form-control" id="porcientoSubvencionIBI">
+            </div>
+            <label for="duracionSubvencionIBI" class="col-sm-2 col-form-label" data-i18n="precios_LBL_duracion"></label>
+            <div class="col-sm-2">
+                <input type="number" class="form-control" id="duracionSubvencionIBI">
+            </div>
+        </div>
+
+        <div class="row" style="background-color: #e3f2fd;">
+            <label for="subvencionEU" class="col-sm-2 offset-sm-4 col-form-label" data-i18n="precios_LBL_subvencionEU"></label>
+            <div class="col-sm-3">
+                <select class="form-select" id="subvencionEU"> <!-- Tiene evento de cambio asociado en Dispatcher-->
+                    <option value="0" data-i18n="precios_LBL_sinSubvencion"></option>
+                    <option value="600" data-i18n="precios_LBL_600Subvencion"></option>
+                    <option value="710" data-i18n="precios_LBL_710Subvencion"></option>
+                    <option value="450" data-i18n="precios_LBL_450Subvencion"></option>
+                    <option value="535" data-i18n="precios_LBL_535Subvencion"></option>
+                </select>
+            </div>
+        </div>
+        <hr/>
+        <div>
+            <table id="financiero" class="table table-striped text-end">
+                <thead class="thead-light">
+                    <tr>
+                        <th scope="col col-sm-1" data-i18n="precios_LBL_año"></th>
+                        <th scope="col" data-i18n="precios_LBL_previo"></th>
+                        <th scope="col" data-i18n="precios_LBL_inversion"></th>
+                        <th scope="col" data-i18n="precios_LBL_ahorro"></th>
+                        <th scope="col" data-i18n="precios_LBL_descuentoIBI"></th>
+                        <th scope="col" data-i18n="precios_LBL_subvencion"></th>
+                        <th scope="col" data-i18n="precios_LBL_pendiente"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div class="form-group row justify-content-center">
+            <div class="col-sm-2" data-i18n="precios_LBL_VAN"></div>
+            <div class="col-sm-2 text-end" id="VAN"><a data-i18n="precios_LBL_pendienteCalculo"></a></div>
+            <div class="col-sm-2 offset-md-1" data-i18n="precios_LBL_TIR"></label></div>
+            <div class="col-sm-2 text-end" id="TIR"><a data-i18n="precios_LBL_pendienteCalculo"></a></div>
+        </div>
+        <hr/>
+
+        <div class="row">
+            <div class="col">
+                <div id="graf_4"></div>
+            </div>
+            <div class="col">
+                <div id="graf_5"></div>
+            </div>
+        </div>
+        <hr/>
+    </div>
+
+<!-- Contenido del tab desde donde se definen ciertos parametros de calculo -->
+    <div class="tab-pane fade" id="parametros-tab" role="tabpanel" aria-labelledby="parametros-tab"><a data-i18n="parametros_LBL_descripcion"></a>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" data-i18n="parametros_LBL_kgCO2AnualPorkWh"></span>
+            </div>
+            <input type="number" class="form-control" 
+                    id="conversionCO2">
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" data-i18n="parametros_LBL_impuestoElectrico"></span>
+            </div>
+            <input type="number" class="form-control" id="impuestoElectrico">
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" data-i18n="parametros_LBL_IVA"></span>
+            </div>
+            <input type="number" class="form-control" 
+                    aria-label="IVA" aria-describedby="IVA"
+                    id="IVA">
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" data-i18n="parametros_LBL_EurosxkWpInstalado"></span>
+            </div>
+            <input type="number" class="form-control" 
+                    id="euroxkWpinstalado">
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" data-i18n="parametros_LBL_perdidasSistema"></span>
+            </div>
+            <input type="number" class="form-control" 
+                    id="perdidasSistema">
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" data-i18n="parametros_LBL_interesVAN"></span>
+            </div>
+            <input type="number" class="form-control" 
+                    id="interesVAN">
+        </div>
+    </div>
+
+
+</body>
+    <!-- dependencias de bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js" integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13" crossorigin="anonymous"></script>
+
+</html>
