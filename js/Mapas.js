@@ -90,7 +90,8 @@ export default function mapaLocalizacion() {
         image: new ol.style.Icon({
           scale: 1,
           anchor: [0.5, 1],
-          src: TCB.basePath + "/datos/marker.png",
+//          src: TCB.basePath + "/datos/marker.png",
+            src: "./datos/marker.png",
         }),
       });
       Vmarker1.setStyle(Smarker1);
