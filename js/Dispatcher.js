@@ -393,7 +393,6 @@ async function _initRendimiento() {
   var inclinacion;
   var azimut;
   var point1;
-  var status;
 
   // Verificamos posicion en el mapa
   if (document.getElementById("lonlat").value == "") {

@@ -1,5 +1,6 @@
 import * as UTIL from "./Utiles.js";
 import TCB from "./TCB.js";
+import _Dispatch from "./Dispatcher.js";
 
 export default class Graficos {   
 
@@ -178,6 +179,8 @@ export default class Graficos {
         } 
 
         var layout = {
+            width: 800,
+            height: 500,
             title: i18next.t('graficos_LBL_tituloBalanceEconomico', {potencia: (TCB.instalacion.potenciaTotal()).toFixed(2)}),
             barmode: 'relative',
             yaxis: {
@@ -227,6 +230,8 @@ export default class Graficos {
         };
 
         var layout = {
+            width: 800,
+            height: 500,
             title: i18next.t('graficos_LBL_alternativasPotencia', {potencia: potencia_kWp}),
             yaxis: {
                 title: '%'
@@ -276,7 +281,43 @@ export default class Graficos {
                 }]
         };
 
-        var data = [trace_TIR, trace_autoconsumo, trace_autosuficiencia, trace_precioInstalacion, trace_ahorroAnual]; //
-        Plotly.newPlot(donde, data, layout);
-    }
+        var data = [trace_TIR, trace_autoconsumo, trace_autosuficiencia, trace_precioInstalacion, trace_ahorroAnual];
+        Plotly.newPlot(donde, data, layout)
+
+        var gd = document.getElementById(donde);
+        var xInDataCoord;
+        var yInDataCoord;
+        var xaxis = gd._fullLayout.xaxis;
+        var yaxis = gd._fullLayout.yaxis;
+        var l = gd._fullLayout.margin.l;
+        var t = gd._fullLayout.margin.t;
+    
+        gd.addEventListener('click', function(evt) {
+            document.getElementById("numeroPaneles").value =  Math.round(xInDataCoord);
+            _Dispatch("Cambio instalacion");
+
+  //Activa la pestaña Precios y su contenido.
+  //Por algún motivo al recalcular este gráfico con los paneles elegidos aparece a continuacion del tab de resultados y es neecsario actualizar
+  //el tab de precios para que no se descomponga la aplicación
+            var current = document.getElementsByClassName("active");
+            current[0].classList.remove("active"); //El nav-proyecto-tab
+            current[0].classList.remove("active"); //Su proyecto-tab
+            var precios = document.getElementById("nav-precios-tab");
+            precios.classList.add("active");
+            precios.classList.add("show");
+            var precios_tab = document.getElementById("precios-tab");
+            precios_tab.classList.add("active");
+            precios_tab.classList.add("show");
+
+        });
+        
+        gd.addEventListener('mousemove', function(evt) {
+            xInDataCoord = xaxis.p2c(evt.x - l);
+            yInDataCoord = yaxis.p2c(evt.y - t);
+            Plotly.relayout(gd, 'title', 
+                [i18next.t('graficos_LBL_alternativasPotencia', {potencia: potencia_kWp}), 
+                i18next.t('graficos_LBL_cambiaPaneles', {paneles: Math.round(xInDataCoord)})].join("<br>"));
+        });
+    };
+
 }
