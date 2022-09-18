@@ -1,7 +1,10 @@
 <?PHP
 $url = 'https://re.jrc.ec.europa.eu/api/v5_2/seriescalc?&pvcalculation=1&peakpower=1&outputformat=json'; //&startyear=2016
 $t1=date("Y/m/d H:i:s");
-
+if(isset($_GET['pvtechchoice']))
+{
+	$pvtechchoice =  $_GET['pvtechchoice'];
+}
 if(isset($_GET['lat']))
 {
 	$lat =  $_GET['lat'];
@@ -35,9 +38,9 @@ if(isset($_GET['aspect']))
 
 if ($aspectNoPresent && $angleNoPresent) 
 {
-	$url = $url . '&lat=' . $lat . '&lon=' . $lon . '&loss=' . $loss . '&optimalangles=1';
+	$url = $url . '&lat=' . $lat . '&lon=' . $lon . '&loss=' . $loss . '&optimalangles=1' . '&pvtechchoice=' . $pvtechchoice;
 } else {
-	$url = $url . '&lat=' . $lat . '&lon=' . $lon . '&loss=' . $loss . '&' . $angle . '&' . $aspect;
+	$url = $url . '&lat=' . $lat . '&lon=' . $lon . '&loss=' . $loss . '&' . $angle . '&' . $aspect . '&pvtechchoice=' . $pvtechchoice;
 }
 
 //Initialize cURL.

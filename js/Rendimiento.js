@@ -34,6 +34,7 @@ export default class Rendimiento {
 
   async loadPVGISdata() {
     var addurl;
+
     if (this.inclinacion == "Optimo") {
       addurl = "&optimalinclination=1";
     } else {
@@ -54,6 +55,8 @@ export default class Rendimiento {
       addurl += "&loss=" + TCB.parametros.perdidasSistema;
     }
 
+    addurl += "&pvtechchoice=" + TCB.parametros.tecnologia;
+
     let url =
       TCB.basePath +
       "proxy PVGIS.php?lat=" +
@@ -66,9 +69,13 @@ export default class Rendimiento {
 
     try {
       const respuesta = await fetch(url);
+
       if (respuesta.status === 200) {
         var PVGISdata = await respuesta.json();
-
+        if (PVGISdata.status !== undefined) {
+          alert(i18next.t("rendimiento_MSG_errorFetch") + PVGISdata.message);
+          return false
+        };
         var unDia = { dia: 0, mes: 0, valores: Array(24).fill(0) };
         let i = 0;
         var hora;
@@ -131,7 +138,7 @@ export default class Rendimiento {
         this.horaFin = hora;
         this.numeroRegistros = i;
         return true;
-      }
+      } 
     } catch (err) {
       alert(i18next.t("rendimiento_MSG_errorFetch") + err.message);
       return false;

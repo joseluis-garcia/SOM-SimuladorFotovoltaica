@@ -181,7 +181,7 @@ export default class Economico {
           if (diaSemana == 0 || diaSemana == 6) {
             pDia += datoTable[idxDia][i] * tarifa.precios[6]; //es un fin de semana por lo que tarifa P6 todo el dia
           } else {
-            pDia += datoTable[idxDia][i] * tarifa.precios[idxTable[idxDia].mes][tarifa.horas[i]];
+            pDia += datoTable[idxDia][i] * tarifa.precios[[tarifa.horas[idxTable[idxDia].mes][i]]];
           }
         }
       }

@@ -11,6 +11,8 @@ const TCB = {
     //Variables globales de funcionamiento
     debug : false,
     basePath : "",
+    pdfDoc: "",
+
 
     consumoCreado : false,
     localizacionDefinida : false,
@@ -45,6 +47,8 @@ const TCB = {
             ]}
     },
     tarifaActiva : '2.0TD',
+    proyectoActivo: "",
+    fuenteConsumos : {},
     
     // Parametros por defecto
     parametros : {
@@ -53,7 +57,8 @@ const TCB = {
         IVA : 21.0,
         euroxkWpinstalado : 1400,
         perdidasSistema : 14,
-        interesVAN : 3
+        interesVAN : 3,
+        tecnologia : 'crystSi'
     },
     potenciaPanelInicio : 0.450
 }

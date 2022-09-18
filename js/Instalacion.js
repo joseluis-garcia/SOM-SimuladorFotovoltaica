@@ -13,6 +13,7 @@ export default class Instalacion {
     this.potenciaUnitaria = potenciaUnitaria;
     this.paneles = paneles;
     this.precioUnitarioInstalacion = precioUnitarioInstalacion;
+    this.technology = TCB.parametros.tecnologia;
   }
 
   potenciaTotal() {

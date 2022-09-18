@@ -1,6 +1,6 @@
 import * as UTIL from "./Utiles.js";
 import TCB from "./TCB.js";
-import _Dispatch from "./Dispatcher.js";
+//import _Dispatch from "./Dispatcher.js";
 
 export default class Graficos {   
 
@@ -192,6 +192,7 @@ export default class Graficos {
     }
 
     plotAlternativas (donde, potencia_kWp, paneles, TIR, autoconsumo, autosuficiencia, precioInstalacion, ahorroAnual, limiteSubvencion) {
+
         var trace_TIR = {
             x: paneles,
             y: TIR,
@@ -247,7 +248,6 @@ export default class Graficos {
             },
 
             shapes: [
-                  //line vertical
                   {
                     type: 'line',
                     x0: TCB.instalacion.paneles, y0: 0,
@@ -282,7 +282,7 @@ export default class Graficos {
         };
 
         var data = [trace_TIR, trace_autoconsumo, trace_autosuficiencia, trace_precioInstalacion, trace_ahorroAnual];
-        Plotly.newPlot(donde, data, layout)
+        Plotly.react(donde, data, layout)
 
         var gd = document.getElementById(donde);
         var xInDataCoord;
@@ -294,7 +294,7 @@ export default class Graficos {
     
         gd.addEventListener('click', function(evt) {
             document.getElementById("numeroPaneles").value =  Math.round(xInDataCoord);
-            _Dispatch("Cambio instalacion");
+            Dispatch("Cambio instalacion");
 
   //Activa la pestaña Precios y su contenido.
   //Por algún motivo al recalcular este gráfico con los paneles elegidos aparece a continuacion del tab de resultados y es neecsario actualizar
@@ -308,7 +308,6 @@ export default class Graficos {
             var precios_tab = document.getElementById("precios-tab");
             precios_tab.classList.add("active");
             precios_tab.classList.add("show");
-
         });
         
         gd.addEventListener('mousemove', function(evt) {
